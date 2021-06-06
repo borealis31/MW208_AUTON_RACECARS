@@ -9,8 +9,8 @@ f_fx | Longitudinal friction force on the front tire
 f_fy | Lateral friction force on the front fire
 f_rx | Longitudinal fiction force on the rear tire
 f_ry | Lateral friction force on the front tire
-d_MX | Maximum longitudinal force 
-d_MY | Maximum lateral force
+d_MX | Maximum longitudinal force coefficient
+d_MY | Maximum lateral force coefficient
 (x,y) | Global (x,y) position on the center of the rear wheel
 v | Velocity vector
 v_x | Longitudinal velocity
@@ -29,3 +29,5 @@ I_xz | Inertia about the x-z plane
 θ (theta) | Angle of pitch
 ψ (psi) | Angle of yaw
 q | Column vector (x; y; psi; z; theta)
+w | Distance from (x,y) to closest point on the center-line of the track
+w_track | Width of the track
