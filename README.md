@@ -6,9 +6,13 @@ Symbols | Explanation
 𝛿 (di) | Angle between the longitudinal axis and the direction of the front wheel
 𝛿_M (di_M) | Maximum angle between longitudinal axis and the direction of the front wheel
 f_fx | Longitudinal friction force on the front tire
+mu_fx | Longitudinal friction force coefficient on the front tire
 f_fy | Lateral friction force on the front fire
+mu_fy | Lateral friction force coefficient on the front tire
 f_rx | Longitudinal fiction force on the rear tire
+mu_rx | Longitudinal friction force coefficient on the rear tire
 f_ry | Lateral friction force on the front tire
+mu_ry | Lateral friction force coefficient on the rear tire
 d_MX | Maximum longitudinal force coefficient
 d_MY | Maximum lateral force coefficient
 (x,y) | Global (x,y) position on the center of the rear wheel
