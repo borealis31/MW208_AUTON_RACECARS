@@ -10,7 +10,7 @@ rowCount = size(waypointsIn,1);
 
 waypointsOut = waypointsIn;
 
-videoSetInter = cell(maxIterations+1,3);
+videoSetInter = cell(maxIterations+1,4);
 videoSetInter{1,1} = waypointsIn;
 videoSetInter{1,2} = 0;
 videoSetInter{1,3} = 999;
@@ -19,6 +19,7 @@ videoSetPt = cell((maxIterations)*length(waypointsIn)+1,3);
 videoSetPt{1,1} = waypointsIn;
 videoSetPt{1,2} = 0;
 videoSetPt{1,3} = 999;
+videoSetPt{1,4} = waypointsOut(1,:);
 
 while (iteration <= maxIterations) && dK > mindK
     fprintf('Iteration: %f/n',iteration);
@@ -63,6 +64,7 @@ while (iteration <= maxIterations) && dK > mindK
         videoSetPt{pt+1,1} = waypointsOut;
         videoSetPt{pt+1,2} = iteration;
         videoSetPt{pt+1,3} = k_prev;
+        videoSetPt{pt+1,4} = [waypointsOut(idxWP, 1), waypointsOut(idxWP, 2)];
         
         pt = pt + 1;
     end
@@ -87,7 +89,7 @@ while (iteration <= maxIterations) && dK > mindK
     iteration = iteration + 1;
 end
 videoSetInter = reshape(videoSetInter(~cellfun('isempty',videoSetInter)),[],3);
-videoSetPt = reshape(videoSetPt(~cellfun('isempty',videoSetPt)),[],3);
+videoSetPt = reshape(videoSetPt(~cellfun('isempty',videoSetPt)),[],4);
 end
 
 function optimPtOut = optim(pointsIn, widthNormalized, waypointsIn, s, bufferSize, it)
