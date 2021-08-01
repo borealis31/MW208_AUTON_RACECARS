@@ -1,10 +1,11 @@
-function [waypointsOut, videoSetInter, videoSetPt, sFit] = discreteWaypointOptimizer(waypointsIn, widthNormalized, maxIterations, mindK, bufferSize, title)
+function [waypointsOut, videoSetInter, videoSetPt, sFit] = discreteWaypointOptimizer(waypointsIn, widthNormalized, maxIterations, mindK, riseAllowance, bufferSize, title)
 %DISCRETEWAYPOINTOPTIMIZER Summary of this function goes here
 %   Detailed explanation goes here
 iteration = 1;
 pt = 1;
-k_prev = 999;
-dK = 999;
+kPrev = 1e3;
+minK = 1e4;
+dK = 1e2;
 
 rowCount = size(waypointsIn,1);
 
@@ -21,7 +22,7 @@ videoSetPt{1,2} = 0;
 videoSetPt{1,3} = 999;
 videoSetPt{1,4} = waypointsOut(1,:);
 
-while (iteration <= maxIterations) && abs(dK) > mindK
+while (iteration <= maxIterations) && abs(dK) > mindK && kPrev - minK < riseAllowance
     for idxWP = 1:rowCount-1
         switch idxWP
             case 1
@@ -63,7 +64,7 @@ while (iteration <= maxIterations) && abs(dK) > mindK
         
         videoSetPt{pt+1,1} = waypointsOut;
         videoSetPt{pt+1,2} = iteration;
-        videoSetPt{pt+1,3} = k_prev;
+        videoSetPt{pt+1,3} = kPrev;
         videoSetPt{pt+1,4} = [waypointsOut(idxWP, 1), waypointsOut(idxWP, 2)];
         
         pt = pt + 1;
@@ -78,16 +79,20 @@ while (iteration <= maxIterations) && abs(dK) > mindK
     DDY = fnder(Y,2);
 
     curvature = @(s) (norm(cross([ppval(DX, s), ppval(DY, s), 0],[ppval(DDX, s), ppval(DDY, s), 0])))/(norm([ppval(DX, s), ppval(DY, s), 0]))^3;
-    k_current = integral(@(sIn) curvature(sIn), 0, arcLenAtPt(end),'ArrayValued',true);
-    dK = k_prev - k_current;
-    k_prev = k_current;
-    fprintf(['Iteration: %f || k: %f', newline],iteration, k_prev);
+    kCurrent = integral(@(sIn) curvature(sIn), 0, arcLenAtPt(end),'ArrayValued',true);
+    dK = kPrev - kCurrent;
+    kPrev = kCurrent;
+    fprintf(['Iteration: %f | k: %f', newline],iteration, kPrev);
+    
+    if kPrev < minK
+        minK = kPrev;
+    end
     
     sFit = arcLenAtPt(end);
     
     videoSetInter{iteration+1,1} = waypointsOut;
     videoSetInter{iteration+1,2} = iteration;
-    videoSetInter{iteration+1,3} = k_prev;
+    videoSetInter{iteration+1,3} = kPrev;
     
     iteration = iteration + 1;
 end
