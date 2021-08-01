@@ -51,12 +51,6 @@ else
     vNew = sqrt(((-2*(sIn(end,1)-sIn(end-1,1))*sqrt(ftFactor+mass*kAtPoint(sIn(end-1,1), DXIn, DDXIn, DYIn, DDYIn)*ftfnFactor*vPrev^2))/(mass))+vPrev^2);
 end
 
-if vNew - vPrev > 4
-    vNew = vPrev + 4;
-elseif vPrev - vNew > 4
-    vNew = vPrev - 4;
-end
-
 if vNew > 40
     vNew = 40;
 end
@@ -64,9 +58,9 @@ end
 end
 
 function sOut = stateRefresher(sIn, vIn, tStep)
-    sOut = sIn + vIn*tStep;
+sOut = sIn + vIn*tStep;
 end
 
 function kSection = kAtPoint(sIn, DX, DDX, DY, DDY)
-    kSection = norm(cross([ppval(DX, sIn), ppval(DY, sIn), 0],[ppval(DDX, sIn), ppval(DDY, sIn), 0]));
+kSection = norm(cross([ppval(DX, sIn), ppval(DY, sIn), 0],[ppval(DDX, sIn), ppval(DDY, sIn), 0]));
 end
