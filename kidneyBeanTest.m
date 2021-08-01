@@ -20,6 +20,6 @@ roadCenters = [ 5.6400   13.6000 0;
                 4.6200  -12.0400 0;
                 5.6400   13.6000 0];
 
-laneSpecification = lanespec(1);
-road(scenario, roadCenters, 'Lanes', laneSpecification, 'Name', 'Road');
+roadWidth = 3;
+road(scenario, roadCenters, roadWidth, 'Name', 'Road');
 
