@@ -1,4 +1,4 @@
-function [vProfile, minTLap] = velocityProfiler(timeStep, waypointsIn, sOrig, ftMax, fnMax, mass)
+function [vProfile, minTLap] = velocityProfiler(timeStep, waypointsIn, sPath, ftMax, fnMax, mass)
 %UNTITLED Summary of this function goes here
 %   Based on:
 % Friedl, Tyler, "Optimized Trajectory Generation for Car-Like Robots on a Closed Loop Track" (2017).
@@ -10,10 +10,11 @@ t = [0];
 vIdx = 1;
 sTraveled = [0];
 lap = [1];
+ft = [0];
+fn = [0];
 
 sDiff = ([0; sqrt(sum((waypointsIn(2:end,:)-waypointsIn(1:end-1,:)).^2,2))]);
 sAtPt = cumsum(sDiff);
-
 
 X = spline(sAtPt,waypointsIn(:,1));
 Y = spline(sAtPt,waypointsIn(:,2));
@@ -22,15 +23,20 @@ DDX = fnder(X,2);
 DY = fnder(Y,1);
 DDY = fnder(Y,2);
 
+vCrit = [fnMax*sqrt(1/(mass*kAtPoint(0, DX, DDX, DY, DDY)))];
+
 while sTraveled(end) < sAtPt(end)
     sTraveled(end+1,1) = stateRefresher(sTraveled(vIdx,1), v(vIdx,1), timeStep);
     vIdx = vIdx + 1;
+    vCrit(vIdx,1) = fnMax*sqrt(1/(mass*kAtPoint(sTraveled(end), DX, DDX, DY, DDY)));
     v(vIdx,1) = velocityGenerator(v(vIdx-1,1), sTraveled, ftMax, fnMax, mass, DX, DDX, DY, DDY);
     t(vIdx,1) = t(vIdx-1,1) + timeStep;
-    lap(vIdx,1) = ceil(sTraveled(end)/sOrig);
+    lap(vIdx,1) = ceil(sTraveled(end)/sPath);
+    ft(vIdx, 1) = mass*(v(vIdx,1)-v(vIdx-1,1))/timeStep;
+    fn(vIdx, 1) = mass*(v(vIdx,1)^2)*kAtPoint(sTraveled(vIdx,1), DX, DDX, DY, DDY);
 end
 
-vProfile = [v, t, sTraveled, ppval(X, sTraveled), ppval(Y, sTraveled)];
+vProfile = [v, t, sTraveled, ppval(X, sTraveled), ppval(Y, sTraveled), ft, fn, vCrit];
 
 tLap2 = t(lap == 2);
 

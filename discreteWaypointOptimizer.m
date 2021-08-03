@@ -82,7 +82,7 @@ while (iteration <= maxIterations) && abs(dK) > mindK && kPrev - minK < riseAllo
     kCurrent = integral(@(sIn) curvature(sIn), 0, arcLenAtPt(end),'ArrayValued',true);
     dK = kPrev - kCurrent;
     kPrev = kCurrent;
-    fprintf(['Iteration: %f | k: %f', newline],iteration, kPrev);
+    fprintf(['Iteration: ', num2str(iteration, '%.0f'), ' | k: ', num2str(kPrev, '%.8f'), newline]);
     
     if kPrev < minK
         minK = kPrev;
