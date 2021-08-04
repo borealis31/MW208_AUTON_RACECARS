@@ -1,4 +1,4 @@
-function [vProfile, minTLap] = velocityProfilerV2(timeStep, waypointsIn, lapsQty, sLap, ftMax, fnMax, mass)
+function [vProfile, vProfByS, vCrit ,minTLap] = velocityProfilerV2(timeStep, waypointsIn, lapsQty, sLap, ftMax, fnMax, mass)
 %UNTITLED Summary of this function goes here
 %   Based on:
 % Friedl, Tyler, "Optimized Trajectory Generation for Car-Like Robots on a Closed Loop Track" (2017).
@@ -22,6 +22,19 @@ numProfiles = 1;
 sDiff = ([0; sqrt(sum((waypointsTracked(2:end,:)-waypointsTracked(1:end-1,:)).^2,2))]);
 sAtPt = cumsum(sDiff);
 
+
+% normFactor = floor(sAtPt(end))/sAtPt(end);
+% sNormalized = sAtPt.*normFactor;
+% waypointsTrackedNormalized = waypointsTracked.*normFactor;
+% waypointsTracked = [spline(sNormalized, waypointsTrackedNormalized(:,1),0:sNormalized(end))',...
+%                     spline(sNormalized, waypointsTrackedNormalized(:,2),0:sNormalized(end))']./normFactor;
+% sDiff = ([0; sqrt(sum((waypointsTracked(2:end,:)-waypointsTracked(1:end-1,:)).^2,2))]);
+% sAtPt = cumsum(sDiff);
+
+
+
+
+
 ds = sAtPt(end)/(10*numPoints);
 
 X = spline(sAtPt,waypointsTracked(:,1));
@@ -35,20 +48,21 @@ DDY = fnder(Y,2);
 sHD = ([0:ds:sAtPt(end)])';
 
 rTrack = 1./kAtPoint(sHD, DX, DDX, DY, DDY);
+rInterp = spline(0:ds:sAtPt(end), rTrack);
 
-vCrit = fnMax*sqrt(rTrack./mass);
+vCrit = fnMax*sqrt(ppval(rInterp,sHD)./mass);
 
-vCritMins = [sHD(islocalmin(vCrit,'FlatSelection','center','MaxNumExtrema',floor(sAtPt(end)))), vCrit(islocalmin(vCrit,'FlatSelection','first','MaxNumExtrema',floor(sAtPt(end))))];
+vCritMins = [sHD(islocalmin(vCrit,'FlatSelection','all','MaxNumExtrema',floor(sAtPt(end)))), vCrit(islocalmin(vCrit,'FlatSelection','first','MaxNumExtrema',floor(sAtPt(end))))];
 
 profiles = cell(length(vCritMins)+1, 1);
 
 for idxMin = 1:length(vCritMins)+2
     if idxMin == length(vCritMins)+1
-        profiles{idxMin} = generateVByS(ds, [0,0], numProfiles, sAtPt, ftFactor, ftfnFactor, mass, X, DX, DDX, Y, DY, DDY);
+        profiles{idxMin} = generateVByS(ds, [0,0], numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, mass);
     elseif idxMin == length(vCritMins)+2
-        profiles{idxMin} = generateVByS(ds, [sAtPt(end), 0], numProfiles, sAtPt, ftFactor, ftfnFactor, mass, X, DX, DDX, Y, DY, DDY);
+        profiles{idxMin} = generateVByS(ds, [sAtPt(end), 0], numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, mass);
     else
-        profiles{idxMin} = generateVByS(ds, vCritMins(idxMin,:), numProfiles, sAtPt, ftFactor, ftfnFactor, mass, X, DX, DDX, Y, DY, DDY);
+        profiles{idxMin} = generateVByS(ds, vCritMins(idxMin,:), numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, mass);
     end
     numProfiles = numProfiles + 1;
 end
@@ -58,36 +72,42 @@ for idxProf = 1:numel(profiles)
     vProfComposite = [vProfComposite, profiles{idxProf}];
 end
 
-vProfFin = min(vProfComposite,[],2);
-vProfile = vProfFin;
+vProfByS = min(vProfComposite,[],2);
 
-v = [1e-3];
+v = [0];
 vIdx = 1;
 t = [0];
-sTraveled = [0];
+sTraveled = [ds];
 lap = 1;
 ft = 0;
 fn = 0;
 
-vInterp = spline(0:ds:sAtPt(end)-ds, vProfile);
+vInterp = spline(0:ds:sAtPt(end)-ds, vProfByS);
 
+
+vTime = tic;
+fprintf(['Beginning Time-Velocty Calculations...' newline])
 while sTraveled(end) < sAtPt(end)
     sTraveled(end+1,1) = stateRefresher(sTraveled(vIdx,1), v(vIdx,1), timeStep);
     vIdx = vIdx + 1;
     v(vIdx,1) = ppval(vInterp, sTraveled(end));
     t(vIdx,1) = t(vIdx-1,1) + timeStep;
     lap(vIdx,1) = ceil(sTraveled(end)/sLap);
-    ft(vIdx, 1) = mass*(v(vIdx,1)-v(vIdx-1,1))/timeStep;
-    fn(vIdx, 1) = mass*(v(vIdx,1)^2)*kAtPoint(sTraveled(vIdx,1), DX, DDX, DY, DDY);
 end
+fprintf(['Time-Velocity Calculations Complete: %f sec' newline], toc(vTime))
+vVsT = spline(t, v);
 
+ft = mass*(ppval(fnder(vVsT,1),t));
+fn = mass*((ppval(vVsT,t)).^2)./(ppval(rInterp,sTraveled));
+
+vCrit = [(0:ds:sAtPt(end))', vCrit];
 vProfile = [v, t, sTraveled, ppval(X, sTraveled), ppval(Y, sTraveled), ft, fn, lap];
 tBestLapSet = t(lap == ceil(lapsQty/2));
 minTLap = tBestLapSet(end) - tBestLapSet(1);
 
 end
 
-function prof = generateVByS(ds, critMins, numProfiles, sIn, ftFactor, ftfnFactor, mass, X, DX, DDX, Y, DY, DDY)
+function prof = generateVByS(ds, critMins, numProfiles, sIn, rInterp, ftFactor, ftfnFactor, mass)
 
 vDecel = [critMins(2)];
 vAccel = [critMins(2)];
@@ -101,7 +121,7 @@ end
 vPrev = critMins(2);
 
 for idxDecel = 2:length(decelS)
-    vNew = real(sqrt(((-2*(decelS(idxDecel)-decelS(idxDecel-1))*sqrt(ftFactor-mass*kAtPoint(decelS(idxDecel-1), DX, DDX, DY, DDY)*ftfnFactor*vPrev^2))/(mass))+vPrev^2));
+    vNew = real(sqrt(((-2*(decelS(idxDecel)-decelS(idxDecel-1))*sqrt(ftFactor-(mass/(ppval(rInterp,decelS(idxDecel-1))))*ftfnFactor*(vPrev^2)))/(mass))+vPrev^2));
     vPrev = vNew;
     vDecel(end+1,1) = vPrev;
 end
@@ -109,7 +129,7 @@ end
 vPrev = critMins(2);
 
 for idxAccel = 2:length(accelS)
-    vNew = real(sqrt(((2*(accelS(idxAccel)-accelS(idxAccel-1))*sqrt(ftFactor-mass*kAtPoint(accelS(idxAccel), DX, DDX, DY, DDY)*ftfnFactor*vPrev^2))/(mass))+vPrev^2));
+    vNew = real(sqrt(((2*(accelS(idxAccel)-accelS(idxAccel-1))*sqrt(ftFactor-(mass/(ppval(rInterp,accelS(idxAccel))))*ftfnFactor*(vPrev^2)))/(mass))+vPrev^2));
     vPrev = vNew;
     vAccel(end+1,1) = vPrev;
 end
