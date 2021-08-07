@@ -1,6 +1,7 @@
-function [vProfile, bestLapSet] = velocityProfilerV2(timeStep, waypointsIn, lapsQty, ftMax, fnMax, mass)
-%VELOCITYPROFILERV2 Velocity Profiler V2 uses corrected point-mass kinematics from the below thesis to generate a time-velocity profile that is optimized for performance
+function [vProfile, vProfileByS, bestLapSet] = velocityProfiler(timeStep, waypointsIn, lapsQty, ftMax, fnMax, mass)
+%VELOCITYPROFILER Velocity Profiler uses corrected point-mass kinematics from the below thesis to generate a time-velocity profile that is optimized for performance
 % -------------------------------------------------------------------------
+% 
 % Based on:
 % Friedl, Tyler, "Optimized Trajectory Generation for Car-Like Robots on a Closed Loop Track" (2017).
 % Electronic Theses and Dissertations. 1370.
@@ -19,7 +20,11 @@ function [vProfile, bestLapSet] = velocityProfilerV2(timeStep, waypointsIn, laps
 % OUTPUT: vProfile — 8-Column matrix detailing the velocity profile of the
 %                     point-mass [velocity, time, cumulative distance, X,
 %                     Y, tangential force, normal force, lap number]
-%         bestLapSet — 4-Column matric detailing the velocity profile of
+%         vProfileByS — 3-Column matrix detailing the velocity of the mass
+%                        in terms of distance traveled as well as the
+%                        critical velocities at each point for reference
+%                        [distance traveled, velocity, critical velocity]
+%         bestLapSet — 4-Column matrix detailing the velocity profile of
 %                       the point-mass during the middle-most lap
 %                       [velocity, time, X, Y]
 % 
@@ -112,7 +117,7 @@ vProfComposite = [];
 for idxProf = 1:numel(profiles)
     vProfComposite = [vProfComposite, profiles{idxProf}];
 end
-vProfByS = min(vProfComposite,[],2);
+vProfileByS = [(0:ds:sAtPt(end))', min(vProfComposite,[],2), vCrit];
 
 % Initalize time-velocity profile values. NOTE: the initial starting
 % position is ds rather than 0, as starting at 0 results in a long pause at
@@ -126,7 +131,7 @@ ft = 0;
 fn = 0;
 
 % Create a velocity spline in terms of distance traveled
-vInterp = spline(0:ds:sAtPt(end), vProfByS);
+vInterp = spline(vProfileByS(:,1), vProfileByS(:,2));
 
 % Start timer for time-velocity calculations
 vTime = tic;
