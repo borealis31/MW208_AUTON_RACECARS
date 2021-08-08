@@ -1,4 +1,4 @@
-function [vProfile, vProfileByS, bestLapSet] = velocityProfiler(timeStep, waypointsIn, lapsQty, ftMax, fnMax, mass)
+function [vProfile, vProfileByS, bestLapSet] = velocityProfiler(timeStep, waypointsIn, lapsQty, ftMax, fnMax, vMax, mass)
 %VELOCITYPROFILER Velocity Profiler uses corrected point-mass kinematics from the below thesis to generate a time-velocity profile that is optimized for performance
 % -------------------------------------------------------------------------
 % 
@@ -90,8 +90,9 @@ vCrit = sqrt(ppval(rInterp,sHD).*(fnMax/mass));
 
 % Find local minima on the vCrit array and return a 2-column matrix
 % [cumulative distance traveled, critical velocity at cumulative distance
-% traveled]
+% traveled]. Output the number of profiles to be generated
 vCritMins = [sHD(islocalmin(vCrit,'FlatSelection','center','MaxNumExtrema',floor(sAtPt(end)/ds))), vCrit(islocalmin(vCrit,'FlatSelection','center','MaxNumExtrema',floor(sAtPt(end)/ds)))];
+fprintf([num2str(size(vCritMins,1),'%.0f'), ' Profiles Identified', newline]);
 
 % Initialize number of profiles needed to create cumulative profile
 profiles = cell(length(vCritMins)+2, 1);
@@ -101,23 +102,26 @@ profiles = cell(length(vCritMins)+2, 1);
 % constraints (vo = 0, vf = 0). See local function for more information
 for idxMin = 1:length(vCritMins)+2
     if idxMin == length(vCritMins)+1
-        profiles{idxMin} = generateVByS(ds, [0,0], numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, mass);
+        profiles{idxMin} = generateVByS(ds, [0,0], numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, vMax, mass);
     elseif idxMin == length(vCritMins)+2
-        profiles{idxMin} = generateVByS(ds, [sAtPt(end), 0], numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, mass);
+        profiles{idxMin} = generateVByS(ds, [sAtPt(end), 0], numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, vMax, mass);
     else
-        profiles{idxMin} = generateVByS(ds, vCritMins(idxMin,:), numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, mass);
+        profiles{idxMin} = generateVByS(ds, vCritMins(idxMin,:), numProfiles, sAtPt, rInterp, ftFactor, ftfnFactor, vMax, mass);
     end
+    
+    if numProfiles == 1
+        vProfComposite = profiles{numProfiles};
+    else
+        vProfComposite = min([vProfComposite, profiles{numProfiles}], [], 2);
+    end
+    
     numProfiles = numProfiles + 1;
 end
 
 % Initialize composite array of velcoity profiles and select the minimum
 % velocity values for each distance traveled to create optimized velocity
 % profile
-vProfComposite = [];
-for idxProf = 1:numel(profiles)
-    vProfComposite = [vProfComposite, profiles{idxProf}];
-end
-vProfileByS = [(0:ds:sAtPt(end))', min(vProfComposite,[],2), vCrit];
+vProfileByS = [(0:ds:sAtPt(end))', vProfComposite, vCrit];
 
 % Initalize time-velocity profile values. NOTE: the initial starting
 % position is ds rather than 0, as starting at 0 results in a long pause at
@@ -161,7 +165,7 @@ bestLapSet = [vProfile(bestLapMap,1), vProfile(bestLapMap,2), vProfile(bestLapMa
 
 end
 
-function prof = generateVByS(ds, critMins, numProfiles, sIn, rInterp, ftFactor, ftfnFactor, mass)
+function prof = generateVByS(ds, critMins, numProfiles, sIn, rInterp, ftFactor, ftfnFactor, vMax, mass)
 %LOCALGENERATEVBYS This local function generates a profile for velocity in terms of distance traveled
 % -------------------------------------------------------------------------
 %
@@ -202,8 +206,9 @@ vPrev = critMins(2);
 
 % For each ds point between the critical point's S and 0, calculate the
 % velocity value subject to kinematic constraints
+rDecel = ppval(rInterp,decelS);
 for idxDecel = 2:length(decelS)
-    vNew = real(sqrt((vPrev^2)+((2*abs(decelS(idxDecel)-decelS(idxDecel-1))/mass)*sqrt(ftFactor - ftfnFactor*((mass*vPrev^2)/ppval(rInterp,decelS(idxDecel-1)))^2))));
+    vNew = real(sqrt((vPrev^2)+((2*abs(decelS(idxDecel)-decelS(idxDecel-1))/mass)*sqrt(ftFactor - ftfnFactor*((mass*vPrev^2)/rDecel(idxDecel-1))^2))));
     vPrev = vNew;
     vDecel(end+1,1) = vPrev;
 end
@@ -213,8 +218,9 @@ vPrev = critMins(2);
 
 % For each ds point between the critical point's S and max S, calculate the
 % velocity value dubject to kinematic constraints
+rAccel = ppval(rInterp,accelS);
 for idxAccel = 2:length(accelS)
-    vNew = real(sqrt((vPrev^2)+((2*abs(accelS(idxAccel)-accelS(idxAccel-1))/mass)*sqrt(ftFactor - ftfnFactor*((mass*vPrev^2)/ppval(rInterp,accelS(idxAccel)))^2))));
+    vNew = real(sqrt((vPrev^2)+((2*abs(accelS(idxAccel)-accelS(idxAccel-1))/mass)*sqrt(ftFactor - ftfnFactor*((mass*vPrev^2)/rAccel(idxAccel))^2))));
     vPrev = vNew;
     vAccel(end+1,1) = vPrev;
 end
@@ -223,15 +229,13 @@ end
 % Compile results into a new matrix for outputting velocity profile in
 % terms of S
 prof = [[flip(vDecel,1); vAccel(2:end)], [flip(decelS,1); accelS(2:end,1)]];
-fprintf(['Profile ', num2str(numProfiles, '%.0f'), ' Generated...' newline]);
+if mod(numProfiles, 25) == 0
+    fprintf([num2str(numProfiles, '%.0f'), ' Profiles Generated', newline]);
+end
 
-% If either of these are empty, remove the ending entry (COMMENTED OUT
-% BECAUSE IT IS UNNECESSARY)
-% if numel(accelS) == 0 || numel(decelS) == 0
-%     prof = prof(1:end-1,:);
-% end
-
-
+profVMaxTemp = prof(:,1);
+profVMaxTemp(profVMaxTemp > vMax) = vMax;
+prof(:,1) = profVMaxTemp;
 end
 
 function kSection = kAtPoint(sIn, DDX, DDY)
@@ -247,12 +251,7 @@ function kSection = kAtPoint(sIn, DDX, DDY)
 %
 % -------------------------------------------------------------------------
 
-% Initialize an array of curvature values
-kSection = zeros(length(sIn), 1);
+% Calculate all curavtures at once using vector inputs to ppval functions
+kSection = sqrt(sum([[ppval(DDX, sIn)].^2, [ppval(DDY, sIn)].^2],2));
 
-% For each distance traveled value, calculate and store curvature in teh
-% curvature array
-for idxS = 1:length(sIn)
-    kSection(idxS) = norm([ppval(DDX, sIn(idxS)), ppval(DDY, sIn(idxS)), 0]);
-end
 end

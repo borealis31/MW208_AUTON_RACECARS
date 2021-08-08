@@ -137,7 +137,7 @@ while (iteration <= maxIterations) && abs(dK) > mindK && kPrev - minK < riseAllo
     kCurrent = integral(@(sIn) curvature(sIn), 0, sAtPt(end),'ArrayValued',true);
     
     % Reset while loop comparison values for next iteration conditions
-    dK = kPrev - kCurrent;
+    dK = minK - kCurrent;
     kPrev = kCurrent;
     
     % Print out optimization progress based on iteration and curvature
@@ -145,9 +145,11 @@ while (iteration <= maxIterations) && abs(dK) > mindK && kPrev - minK < riseAllo
     
     % Reset the vale for minK if the k of the new path is less than it
     if kPrev < minK
+        bestPoints = waypointsOut;
+        bestIt = iteration;
         minK = kPrev;
+        bestPtFn = pt;
     end
-    
     
     % Output Video Set iteration data
     videoSetInter{iteration+1,1} = waypointsOut;
@@ -156,7 +158,18 @@ while (iteration <= maxIterations) && abs(dK) > mindK && kPrev - minK < riseAllo
     
     % Progress iteration
     iteration = iteration + 1;
+    
+    % If the while loops exits due to exceeding rise allowance, reset the
+    % waypoints and relevant things to the best recorded state
+    if ~(kPrev - minK < riseAllowance)
+        fprintf(['Rise allowance exceeded; returning to best iteration: ' num2str(bestIt, '%.0f')]);
+        waypointsOut = bestPoints;
+        videoSetInter(bestIt+1:end,:) = [];
+        videoSetPt(bestPtFn+1:end,:) = [];
+        iteration = bestIt;
+    end
 end
+
 
 % Once iterations complete, remove empty cells from video sets and reshape
 % to original column size
@@ -219,7 +232,7 @@ Kn1 = @(y) norm(Nn1(y));
 % Use the three curvature expressions to create a fitness function for the
 % patternsearch algorithm, weighting the curren point's curvature slightly
 % more than the immediate previous and future curvatures
-fitnessFunction = @(y) (0.75*Kn1(y) + K0(y) + 0.75*K1(y));
+fitnessFunction = @(y) (0.5*Kn1(y) + K0(y) + 0.5*K1(y));
 
 % If this is the first iteration, make the initial y value for the
 % patternseach a random number within track constraints
