@@ -18,3 +18,4 @@ Kidney Bean Track            |  Oblong Track
 Maximum Tangential Force: 1500N | Maximum Tangential Force: 2400N
 Maximum Normal Force: 1500N | Maximum Normal Force: 900N
 Mass: 300kg | Mass: 100kg
+Maximum Velocity: 100m/s | Maximum Velocity: 175m/s
