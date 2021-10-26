@@ -1,6 +1,8 @@
 # MW208_AUTON_RACECARS
 An attempt at MathWorks' Excellence in Innovation Project 208
 
+For an in-depth overview and demonstration of the project, see the [YouTube Overview](https://youtu.be/WzsFHxG3lDw) 
+
 This optimizer utilizes a curvature-optimization approach that is coupled with a point-mass velocity-profile optimization method subject to force constraints and mass.
 
 The optimizer begins by creating an initial path determined by the centerline between the outer and inner bounds. Following this, the points are passed to the discrete path optimizer. These points are then optimized along a "chord", which is a radial path from the inner to outer bound crossing through the point, using a patternsearch optimizer from MATLAB's Global Optimization Toolbox. This process is iterated until a maximum number of iterations is met or until the total curvature decreases less than the minimum decrement. See the below GIFs for a visualization of this process (discreteWaypointOptimizer.m).
