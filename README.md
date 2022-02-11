@@ -1,5 +1,7 @@
 # MW208_AUTON_RACECARS
-An attempt at MathWorks' Excellence in Innovation Project 208
+An attempt at [Project 208](https://github.com/mathworks/MathWorks-Excellence-in-Innovation/tree/main/projects/Path%20Planning%20for%20Autonomous%20Race%20Cars)
+from the [MathWorks Excellence in Innovation program](https://github.com/mathworks/MathWorks-Excellence-in-Innovation).<br>
+For an in-depth overview and demonstration of the project, see the [YouTube Overview](https://youtu.be/WzsFHxG3lDw).
 
 This optimizer utilizes a curvature-optimization approach that is coupled with a point-mass velocity-profile optimization method subject to force constraints and mass.
 
@@ -18,3 +20,4 @@ Kidney Bean Track            |  Oblong Track
 Maximum Tangential Force: 1500N | Maximum Tangential Force: 2400N
 Maximum Normal Force: 1500N | Maximum Normal Force: 900N
 Mass: 300kg | Mass: 100kg
+Maximum Velocity: 100m/s | Maximum Velocity: 175m/s
