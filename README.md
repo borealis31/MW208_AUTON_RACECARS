@@ -9,14 +9,14 @@ The optimizer begins by creating an initial path determined by the centerline be
 
 Kidney Bean Track            |  Oblong Track
 :-------------------------:|:-------------------------:
-![Optimization Kidney Bean Visualization GIF](https://github.com/borealis31/MW208_AUTON_RACECARS/blob/main/KidneyBeanTest.gif)  |  ![Optimization Oblong Visualization GIF](https://github.com/borealis31/MW208_AUTON_RACECARS/blob/main/OblongTest.gif)
+![Optimization Kidney Bean Visualization GIF](https://github.com/borealis31/MW208_AUTON_RACECARS/tree/main/ExampleMedia/KidneyBeanTest.gif)  |  ![Optimization Oblong Visualization GIF](https://github.com/borealis31/MW208_AUTON_RACECARS/tree/main/ExampleMedia/OblongTest.gif)
 
 Once these paths are optimized according to the provided track constraints, a velocity profile is generated based on point-mass kinematics constraints. Using maximum/critical velocity calculations, we can identify minimum velocity locations and generate acceleration and deceleration profiles for after and before each minimum velocity. These profiles are then all compared against each other, and for each distance on every profile, the minimum velcoty is selected in order to ensure controlability along the track while minimizing lap time. All of this data is returned and can be used to generate a video that showcases the position of the mass in real-time. Best lap values are also returned based on the middle-most lap and plotted using a colored scatter plot to show the velocity along the path. See the below pictures for a visualization of each track's maximum velocity gradient (velocityProfilerV2.m). We can also plot each velocity and critical velocity by its distance along the track.
 
 Kidney Bean Track            |  Oblong Track
 :-------------------------:|:-------------------------:
-![Velocity Kidney Bean Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/blob/main/velocityGradientBestLapKidneyBeanTestEXAMPLE.png)  |  ![Velocity Oblong Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/blob/main/velocityGradientBestLapOblongTestEXAMPLE.png)
-![VvsS Kidney Bean Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/blob/main/velocityByDistanceKidneyBeanTestEXAMPLE.png) | ![VvsS Oblong Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/blob/main/velocityByDistanceOblongTestEXAMPLE.png) 
+![Velocity Kidney Bean Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/tree/main/ExampleMedia/velocityGradientBestLapKidneyBeanTestEXAMPLE.png)  |  ![Velocity Oblong Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/tree/main/ExampleMedia/velocityGradientBestLapOblongTestEXAMPLE.png)
+![VvsS Kidney Bean Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/tree/main/ExampleMedia/velocityByDistanceKidneyBeanTestEXAMPLE.png) | ![VvsS Oblong Visualization PNG](https://github.com/borealis31/MW208_AUTON_RACECARS/tree/main/ExampleMedia/velocityByDistanceOblongTestEXAMPLE.png) 
 Maximum Tangential Force: 1500N | Maximum Tangential Force: 2400N
 Maximum Normal Force: 1500N | Maximum Normal Force: 900N
 Mass: 300kg | Mass: 100kg
