@@ -5,7 +5,7 @@ For an in-depth overview and demonstration of the project, see the [YouTube Over
 
 This optimizer utilizes a curvature-optimization approach that is coupled with a point-mass velocity-profile optimization method subject to force constraints and mass.
 
-The optimizer begins by creating an initial path determined by the centerline between the outer and inner bounds. Following this, the points are passed to the discrete path optimizer. These points are then optimized along a "chord", which is a radial path from the inner to outer bound crossing through the point, using a patternsearch optimizer from MATLAB's Global Optimization Toolbox. This process is iterated until a maximum number of iterations is met or until the total curvature decreases less than the minimum decrement. See the below GIFs for a visualization of this process (discreteWaypointOptimizer.m).
+The optimizer begins by creating an initial path determined by the centerline between the outer and inner bounds. Following this, the points are passed to the discrete path optimizer. These points are then optimized along a "chord", which is a radial path from the inner to outer bound crossing through the point, using a patternsearch optimizer from [MATLAB's Global Optimization Toolbox](https://www.mathworks.com/products/global-optimization.html). This process is iterated until a maximum number of iterations is met or until the total curvature decreases less than the minimum decrement. See the below GIFs for a visualization of this process (discreteWaypointOptimizer.m).
 
 Kidney Bean Track            |  Oblong Track
 :-------------------------:|:-------------------------:
@@ -21,3 +21,9 @@ Maximum Tangential Force: 1500N | Maximum Tangential Force: 2400N
 Maximum Normal Force: 1500N | Maximum Normal Force: 900N
 Mass: 300kg | Mass: 100kg
 Maximum Velocity: 100m/s | Maximum Velocity: 175m/s
+
+As a real-world example, we can look at the [Silverstone Circuit](https://en.wikipedia.org/wiki/Silverstone_Circuit) in Towcester, England. The track data was acquired by [OpenStreetMap](https://www.openstreetmap.org) and processed by [MATLAB's Driving Scenario Designer](https://www.mathworks.com/help/driving/ref/drivingscenariodesigner-app.html). Since this track is much too large to accurately be seen in its entirety, a focused look at one of the more winding parts of the track can provide a good sense of what is happening.
+
+Silverstone Circuit         |
+:--------------------------:|
+![Silverstone Coner Optimization GIF](https://github.com/borealis31/MW208_AUTON_RACECARS/blob/main/ExampleMedia/SilverstoneCircuitCornerEXAMPLE.gif) |
